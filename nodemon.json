@@ -1,0 +1,7 @@
+{
+  "watch": ["src/server"],
+  "ext": ".ts,.js",
+  "ignore": [],
+  "exec": "node --inspect -r ts-node/register ./src/server/index.ts",
+  "execWithInspect": "node --inspect -r ts-node/register ./src/server/index.ts"
+}
