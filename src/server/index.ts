@@ -1,16 +1,27 @@
-import express from 'express';
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
 
 import readGenes from './genes';
 
-const app = express();
-const port = 3000;
+const fastify = Fastify({
+  logger: true
+});
+fastify.register(cors);
 
-app.get('/', async (req, res) => {
-  await readGenes();
+fastify.get('/', async (_, response) => {
+  response.send('Hello World');
+});
 
-  res.send('Hello World!')
-})
+fastify.post('/data', async (req, res) => {
+  return await readGenes(JSON.parse(req.body as any));
+});
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+
+(async () => {
+  try {
+    await fastify.listen({ port: 3000 })
+  } catch (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
+})();

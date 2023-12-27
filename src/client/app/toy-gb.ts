@@ -6,6 +6,7 @@ import ViewportController from './genome-browser/controllers/viewport-controller
 import Painter from './genome-browser/drawing';
 
 import rulerProgram from './genome-browser/programs/ruler';
+import { geneProgram } from './genome-browser/programs/genes';
 
 @customElement('toy-gb')
 class ToyGB extends LitElement {
@@ -40,6 +41,9 @@ class ToyGB extends LitElement {
     start: 2750000,
     end: 2751005
   };
+
+  genome_id: string = 'a7335667-93e7-11ec-a39d-005056b38ce3';
+  region_name: string = '13';
 
   viewportController = new ViewportController(this, this.viewport);
 
@@ -158,15 +162,30 @@ class ToyGB extends LitElement {
 
   }
 
-  executePrograms() {
+  async executePrograms() {
     // this should be dynamically generated based on passed settings
     const programs = [
-      rulerProgram
+      rulerProgram,
+      geneProgram
     ];
+
+    /**
+     * TODO:
+     * - genome id
+     * - region name
+     * - programs should be registered through events
+     * - a program should be asynchronous 
+     */
 
     const viewport = this.viewportController.viewport ?? this.viewport;
 
-    const shapes = programs.flatMap(program => program({ viewport }));
+    const shapePromises = programs.map(program => program({
+      viewport,
+      genome_id: 'human', // TODO: pass through properties
+      region_name: '13' // TODO: pass through properties
+    }));
+
+    const shapes = await Promise.all(shapePromises).then(shapesArr => shapesArr.flat());
 
     this.painter.setShapes(shapes);
     this.painter.paint({ viewport });

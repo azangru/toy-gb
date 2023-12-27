@@ -8,7 +8,7 @@ type RulerProgramParams = {
   viewport: Viewport
 }
 
-const rulerProgram = (params: RulerProgramParams) => {
+const rulerProgram = async (params: RulerProgramParams) => {
   const { viewport } = params;
   const rulerTicks = getRulerTicks({ startBp: viewport.start, endBp: viewport.end });
 
