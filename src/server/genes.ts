@@ -36,7 +36,26 @@ const readGenes = async (params: Params) => {
       return bedParser.parseLine(`${region_name}\t${start}\t${end}\t${rest}`, { uniqueId })
     });
 
-    return lines;
+    // console.log(lines[0]);
+
+    return lines.map(line => ({
+      region_name: line.chrom,
+      start: line.chromStart,
+      end: line.chromEnd,
+      stable_id: line.name,
+      unversioned_stable_id: line.unversionedTranscriptId,
+      strand: line.strand,
+      thick_start: line.thickStart,
+      thick_end: line.thickEnd,
+      block_sizes: line.blockSizes,
+      block_starts: line.blockStarts,
+      transcript_start: line.transcriptStart,
+      transcript_end: line.transcriptEnd,
+      transcript_designation: line.transcriptDesignation,
+      gene_stable_id: line.geneId,
+      gene_symbol: line.geneName,
+      gene_unversioned_stable_id: line.unversionedGeneId
+    }));
   } catch (error) {
     console.log('error', error);
   }

@@ -18,3 +18,10 @@ Could it be something like this?
 - Rerender on resize — DONE
 - Pass location from outside
 - Fetch data
+
+
+
+
+# Dragging and data fetching
+- [Horizontal Scrolling on Canvas](https://stackoverflow.com/questions/14368716/horizontal-scrolling-on-canvas-html5)
+- https://www.simile-widgets.org/timeline/

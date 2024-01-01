@@ -37,10 +37,18 @@ class ToyGB extends LitElement {
   // canvasContext: CanvasRenderingContext2D;
   painter!: Painter;
 
+  // viewport = {
+  //   start: 2750000,
+  //   end: 2751005
+  // };
+  // viewport = {
+  //   start: 1,
+  //   end: 35181319
+  // }
   viewport = {
-    start: 2750000,
-    end: 2751005
-  };
+    start: 27000000,
+    end: 27100000
+  }
 
   genome_id: string = 'a7335667-93e7-11ec-a39d-005056b38ce3';
   region_name: string = '13';
@@ -141,14 +149,21 @@ class ToyGB extends LitElement {
     `;
   }
 
+  // hypothetically, this should be a queue: if you didn't have time to fit in a frame, you should skip a frame 
   rerender() {
-    this.clearCanvas();
-    this.executePrograms();
+    requestAnimationFrame(() => {
+      this.clearCanvas();
+      this.executePrograms();
+    });
   }
 
   clearCanvas() {
     const canvasContext = this.getCanvasContext();
-    canvasContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    canvasContext.reset();
+
+    // this should be in its own function, to run after the reset
+    const { devicePixelRatio } = window;
+    canvasContext.scale(devicePixelRatio, devicePixelRatio);
   }
 
   // public method for consumers of this element to send commands to it 
@@ -189,6 +204,8 @@ class ToyGB extends LitElement {
 
     this.painter.setShapes(shapes);
     this.painter.paint({ viewport });
+
+    this.canvas.getContext('2d').fill(); // Apparently, the fill command is resource-intensive for the GPU and can't be run for every rectangle
   }
 
 }

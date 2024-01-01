@@ -1,6 +1,9 @@
-import { fetchData } from './data-fetcher';
+import { getData } from './data-fetcher';
 
-import type { Viewport } from "../../types/viewport"
+import SolidRectangle from "../../shapes/solid-rectangle";
+
+import type { Viewport } from '../../types/viewport';
+import type { Transcript } from '../../../../../shared/types/transcript';
 
 /**
  * - Should request data for the current viewport
@@ -19,9 +22,18 @@ type GenesProgramParams = {
 
 
 export const geneProgram = async (params: GenesProgramParams) => {
-  const { viewport } = params;
+  const data = await getData({ ...params, track_type: 'gene' }) as Transcript[];
 
-  const data = await fetchData({ ...params, track_type: 'gene' });
+  const canonicalTranscripts = data
+    .filter(transcript => transcript.transcript_designation === 'canonical');
 
-  return [];
+  return canonicalTranscripts.map(transcript => {
+    return new SolidRectangle({
+      x: transcript.start,
+      y: 0,
+      width: transcript.end - transcript.start,
+      height: 10,
+      color: 'red'
+    });
+  });
 };

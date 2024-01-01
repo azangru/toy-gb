@@ -3,7 +3,7 @@
     "target": "es2021",
     "module": "es2015",
     "moduleResolution": "node",
-    "lib": ["es2021", "dom"],
+    "lib": ["es2023", "dom"],
     "declaration": true,
     "declarationMap": true,
     "experimentalDecorators": true,

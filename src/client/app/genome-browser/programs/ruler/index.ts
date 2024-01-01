@@ -1,4 +1,4 @@
-import Ruler from "../../shapes/ruler"
+import Ruler from "../../shapes/ruler";
 
 import { getRulerTicks } from './intervals';
 
