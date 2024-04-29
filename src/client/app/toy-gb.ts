@@ -46,8 +46,8 @@ class ToyGB extends LitElement {
   //   end: 35181319
   // }
   viewport = {
-    start: 27000000,
-    end: 27100000
+    start: 27066155,
+    end: 27171811
   }
 
   genome_id: string = 'a7335667-93e7-11ec-a39d-005056b38ce3';
@@ -204,8 +204,6 @@ class ToyGB extends LitElement {
 
     this.painter.setShapes(shapes);
     this.painter.paint({ viewport });
-
-    this.canvas.getContext('2d').fill(); // Apparently, the fill command is resource-intensive for the GPU and can't be run for every rectangle
   }
 
 }

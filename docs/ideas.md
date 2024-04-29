@@ -16,10 +16,15 @@ Could it be something like this?
 - Drag event - DONE
 - Zoom event - DONE
 - Rerender on resize — DONE
+- Switch rendering at a certain zoom level
+- Zoom should use cursor position as center
 - Pass location from outside
 - Fetch data
 
 
+
+# Cursor interactions
+- isPointInPath – https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/isPointInPath
 
 
 # Dragging and data fetching

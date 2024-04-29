@@ -35,8 +35,8 @@ export type Transcript = {
   thick_end: number;
   block_sizes: number[];
   block_starts: number[];
-  transcript_start: number;
-  transcript_end: number;
+  transcript_start: number; // Q: is this needed?
+  transcript_end: number; // Q: is this needed?
   transcript_designation: string;
   gene_stable_id: string;
   gene_symbol: string;

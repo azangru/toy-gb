@@ -1,15 +1,15 @@
-import type { SolidRectangleInstance } from "../../shapes/solid-rectangle";
+import type { EmptyRectangleInstance } from "../../shapes/empty-rectangle";
 import type { LinearScale } from "../linearScale";
 import type { Viewport } from "../../types/viewport";
 
-type SolidRectanglePainterParams = {
+type EmptyRectanglePainterParams = {
   canvasContext: CanvasRenderingContext2D;
-  shape: SolidRectangleInstance;
+  shape: EmptyRectangleInstance;
   scale: LinearScale;
   viewport: Viewport;
 }
 
-const solidRectanglePainter = (params: SolidRectanglePainterParams) => {
+const emptyRectanglePainter = (params: EmptyRectanglePainterParams) => {
   const { shape, canvasContext, viewport, scale } = params;
 
   const x = scale(shape.x - viewport.start);
@@ -18,11 +18,9 @@ const solidRectanglePainter = (params: SolidRectanglePainterParams) => {
   const height = shape.height;
 
   canvasContext.save();
-  canvasContext.fillStyle = shape.color;
-  canvasContext.strokeStyle = shape.color;
-  canvasContext.fillRect(x, y, width, height);
+  canvasContext.strokeStyle = shape.strokeColor;
   canvasContext.strokeRect(x, y, width, height);
   canvasContext.restore();
 };
 
-export default solidRectanglePainter;
+export default emptyRectanglePainter;
