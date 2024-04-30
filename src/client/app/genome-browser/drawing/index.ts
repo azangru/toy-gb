@@ -6,15 +6,24 @@ import getLinearScale from "./linearScale";
 import PaintersMap from "./painters/painters-map";
 
 class Painter {
-  canvas: HTMLCanvasElement;
+  canvasContext: OffscreenCanvasRenderingContext2D;
   shapes: Shape[] = [];
   canvasWidth: number;
   canvasHeight: number;
 
-  constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
-    this.canvasWidth = canvas.width / devicePixelRatio; // TODO: maybe do this nicer
-    this.canvasHeight = canvas.height / devicePixelRatio; // TODO: maybe do this nicer
+  constructor({
+    canvasContext,
+    canvasWidth,
+    canvasHeight
+  }: {
+    canvasContext: OffscreenCanvasRenderingContext2D;
+    canvasWidth: number;
+    canvasHeight: number;
+  }) {
+    this.canvasContext = canvasContext;
+    // FIXME: this should be readjusted on resize
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
   }
 
   // NOTE: this is probably wrong — we need a concept of tracks
@@ -33,7 +42,7 @@ class Painter {
 
       // TODO: need better types
       painter({ 
-        canvasContext: this.canvas.getContext('2d'),
+        canvasContext: this.canvasContext,
         shape,
         scale,
         viewport

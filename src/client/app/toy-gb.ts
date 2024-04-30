@@ -33,6 +33,8 @@ class ToyGB extends LitElement {
 
   @query('canvas')
   canvas!: HTMLCanvasElement;
+  offscreenCanvas!: OffscreenCanvas;
+  canvasContext!: OffscreenCanvasRenderingContext2D;
 
   // canvasContext: CanvasRenderingContext2D;
   painter!: Painter;
@@ -67,7 +69,14 @@ class ToyGB extends LitElement {
 
   firstUpdated() {
     this.initialiseCanvas();
-    this.painter = new Painter(this.canvas);
+    const { devicePixelRatio } = window;
+    const canvasWidth = this.canvas.width / devicePixelRatio;
+    const canvasHeight = this.canvas.height / devicePixelRatio;
+    this.painter = new Painter({
+      canvasContext: this.canvasContext,
+      canvasWidth,
+      canvasHeight
+    });
     this.viewportController.registerCanvas(this.canvas);
     // this.addListeners();
 
@@ -88,8 +97,9 @@ class ToyGB extends LitElement {
     const { devicePixelRatio } = window;
     this.canvas.width = width * devicePixelRatio;
     this.canvas.height = height * devicePixelRatio;
-    const context = this.canvas.getContext('2d') as CanvasRenderingContext2D;
-    context.scale(devicePixelRatio, devicePixelRatio);
+    const offscreenCanvas = this.canvas.transferControlToOffscreen();
+    this.canvasContext = offscreenCanvas.getContext('2d');
+    this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
     // this.canvasContext = context;
     // return canvasElement;
   }
@@ -132,15 +142,10 @@ class ToyGB extends LitElement {
       const { devicePixelRatio } = window;
       this.canvas.width = width * devicePixelRatio;
       this.canvas.height = height * devicePixelRatio;
-      const canvasContext = this.getCanvasContext();
-      canvasContext.scale(devicePixelRatio, devicePixelRatio);
+      this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
       this.rerender();
     });
     resizeObserver.observe(this.canvas);
-  }
-
-  getCanvasContext() {
-    return this.canvas.getContext('2d') as CanvasRenderingContext2D;
   }
 
   render() {
@@ -158,12 +163,11 @@ class ToyGB extends LitElement {
   }
 
   clearCanvas() {
-    const canvasContext = this.getCanvasContext();
-    canvasContext.reset();
+    this.canvasContext.reset();
 
     // this should be in its own function, to run after the reset
     const { devicePixelRatio } = window;
-    canvasContext.scale(devicePixelRatio, devicePixelRatio);
+    this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
   }
 
   // public method for consumers of this element to send commands to it 
