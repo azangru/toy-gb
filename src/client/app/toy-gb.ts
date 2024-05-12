@@ -3,10 +3,7 @@ import { customElement, query } from 'lit/decorators.js';
 
 import ViewportController from './genome-browser/controllers/viewport-controller';
 
-import Painter from './genome-browser/drawing';
-
-import rulerProgram from './genome-browser/programs/ruler';
-import { geneProgram } from './genome-browser/programs/genes';
+import type { OffscreenCanvasMessage, RenderMessage } from './genome-browser/worker/worker-message-type';
 
 @customElement('toy-gb')
 class ToyGB extends LitElement {
@@ -33,11 +30,10 @@ class ToyGB extends LitElement {
 
   @query('canvas')
   canvas!: HTMLCanvasElement;
-  offscreenCanvas!: OffscreenCanvas;
-  canvasContext!: OffscreenCanvasRenderingContext2D;
+  worker: Worker;
+  rafId: number | null;
 
   // canvasContext: CanvasRenderingContext2D;
-  painter!: Painter;
 
   // viewport = {
   //   start: 2750000,
@@ -58,35 +54,25 @@ class ToyGB extends LitElement {
   viewportController = new ViewportController(this, this.viewport);
 
 
-  // constructor() {
-  //   super();
-  //   // const root = this.attachShadow({ mode: 'open', delegatesFocus: true });
-  //   // root.innerHTML = `
-  //   //   ${styles}
-  //   //   <canvas></canvas>
-  //   // `;
-  // }
+  constructor() {
+    super();
+    this.worker = new Worker(new URL('./genome-browser/worker/genome-browser-worker.ts', import.meta.url), {
+      type: 'module'
+    });
+  }
 
   firstUpdated() {
     this.initialiseCanvas();
-    const { devicePixelRatio } = window;
-    const canvasWidth = this.canvas.width / devicePixelRatio;
-    const canvasHeight = this.canvas.height / devicePixelRatio;
-    this.painter = new Painter({
-      canvasContext: this.canvasContext,
-      canvasWidth,
-      canvasHeight
-    });
     this.viewportController.registerCanvas(this.canvas);
-    // this.addListeners();
+    this.addListeners();
 
 
     // NOTE: this would have to be moved somewhere
-    this.executePrograms();
+    // this.executePrograms();
   }
 
   updated() {
-    this.rerender();
+    this.repaintCanvas();
   }
 
   initialiseCanvas() {
@@ -98,54 +84,33 @@ class ToyGB extends LitElement {
     this.canvas.width = width * devicePixelRatio;
     this.canvas.height = height * devicePixelRatio;
     const offscreenCanvas = this.canvas.transferControlToOffscreen();
-    this.canvasContext = offscreenCanvas.getContext('2d');
-    this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
-    // this.canvasContext = context;
-    // return canvasElement;
+    this.passCanvasToWorker(offscreenCanvas);
   }
 
+  passCanvasToWorker = (canvas: OffscreenCanvas) => {
+    const canvasWidth = this.canvas.width / devicePixelRatio;
+    const canvasHeight = this.canvas.height / devicePixelRatio;
+    const message: OffscreenCanvasMessage = {
+      type: 'offscreen-canvas',
+      canvas,
+      width: canvasWidth,
+      height: canvasHeight,
+      devicePixelRatio: window.devicePixelRatio
+    };
+    this.worker.postMessage(message, [canvas]);
+  };
+
   addListeners() {
-    this.canvas.addEventListener('wheel', (event: WheelEvent) => {
-      event.preventDefault();
-      const { start, end } = this.viewport;
-      const viewportRange = end - start;
-      const step = Math.round(0.01 * Math.abs(event.deltaY) * viewportRange);
-
-      let newStart: number, newEnd: number;
-
-      // wheel up means zoom out; wheel down means zoom in
-      if (event.deltaY < 0) {
-        newStart = Math.min(
-          start + step,
-          end
-        );
-        newEnd = Math.max(
-          end - step,
-          start
-        ); 
-      } else {
-        newStart = Math.max(
-          start - step,
-          1
-        );
-        newEnd = end + step;
-      }
-
-      this.viewport = { start: newStart, end: newEnd };
-
-      this.rerender();
-    });
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      const resizeObserverEntry = entries[0];
-      const { width, height } = resizeObserverEntry.contentRect;
-      const { devicePixelRatio } = window;
-      this.canvas.width = width * devicePixelRatio;
-      this.canvas.height = height * devicePixelRatio;
-      this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
-      this.rerender();
-    });
-    resizeObserver.observe(this.canvas);
+    // const resizeObserver = new ResizeObserver((entries) => {
+    //   const resizeObserverEntry = entries[0];
+    //   const { width, height } = resizeObserverEntry.contentRect;
+    //   const { devicePixelRatio } = window;
+    //   this.canvas.width = width * devicePixelRatio;
+    //   this.canvas.height = height * devicePixelRatio;
+    //   this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
+    //   this.rerender();
+    // });
+    // resizeObserver.observe(this.canvas);
   }
 
   render() {
@@ -155,19 +120,21 @@ class ToyGB extends LitElement {
   }
 
   // hypothetically, this should be a queue: if you didn't have time to fit in a frame, you should skip a frame 
-  rerender() {
-    requestAnimationFrame(() => {
-      this.clearCanvas();
-      this.executePrograms();
-    });
-  }
+  repaintCanvas() {
+    if (!this.rafId) {
+      this.rafId = requestAnimationFrame(() => {
+        console.log('sent');
+        const message: RenderMessage = {
+          type: 'render',
+          viewport: this.viewportController.viewport
+        }
+        this.worker.postMessage(message);
 
-  clearCanvas() {
-    this.canvasContext.reset();
-
-    // this should be in its own function, to run after the reset
-    const { devicePixelRatio } = window;
-    this.canvasContext.scale(devicePixelRatio, devicePixelRatio);
+        this.rafId = null;
+      });
+    } else {
+      console.log('debounced');
+    }
   }
 
   // public method for consumers of this element to send commands to it 
@@ -181,34 +148,13 @@ class ToyGB extends LitElement {
 
   }
 
-  async executePrograms() {
-    // this should be dynamically generated based on passed settings
-    const programs = [
-      rulerProgram,
-      geneProgram
-    ];
-
-    /**
-     * TODO:
-     * - genome id
-     * - region name
-     * - programs should be registered through events
-     * - a program should be asynchronous 
-     */
-
-    const viewport = this.viewportController.viewport ?? this.viewport;
-
-    const shapePromises = programs.map(program => program({
-      viewport,
-      genome_id: 'human', // TODO: pass through properties
-      region_name: '13' // TODO: pass through properties
-    }));
-
-    const shapes = await Promise.all(shapePromises).then(shapesArr => shapesArr.flat());
-
-    this.painter.setShapes(shapes);
-    this.painter.paint({ viewport });
-  }
+  /**
+   * TODO:
+   * - genome id
+   * - region name
+   * - programs should be registered through events
+   * - a program should be asynchronous 
+   */
 
 }
 

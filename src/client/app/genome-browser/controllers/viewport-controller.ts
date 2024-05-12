@@ -1,6 +1,6 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
-type Viewport = {
+export type Viewport = {
   start: number;
   end: number;
 }
