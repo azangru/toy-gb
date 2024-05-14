@@ -31,9 +31,10 @@ class ToyGB extends LitElement {
   @query('canvas')
   canvas!: HTMLCanvasElement;
   worker: Worker;
-  rafId: number | null;
 
-  // canvasContext: CanvasRenderingContext2D;
+  isRendering = false;
+  shouldRepaint = false;
+
 
   // viewport = {
   //   start: 2750000,
@@ -59,6 +60,21 @@ class ToyGB extends LitElement {
     this.worker = new Worker(new URL('./genome-browser/worker/genome-browser-worker.ts', import.meta.url), {
       type: 'module'
     });
+    this.setupWorkerListeners();
+  }
+
+  setupWorkerListeners = () => {
+    this.worker.addEventListener('message', (event) => {
+      if (event.data.type === 'render-complete') {
+        this.isRendering = false;
+
+        if (this.shouldRepaint) {
+          this.shouldRepaint = false;
+          this.isRendering = true;
+          this.repaintCanvas();
+        }
+      }
+    });
   }
 
   firstUpdated() {
@@ -72,7 +88,11 @@ class ToyGB extends LitElement {
   }
 
   updated() {
-    this.repaintCanvas();
+    if (this.isRendering) {
+      this.shouldRepaint = true;
+    } else {
+      this.repaintCanvas();
+    }
   }
 
   initialiseCanvas() {
@@ -121,20 +141,13 @@ class ToyGB extends LitElement {
 
   // hypothetically, this should be a queue: if you didn't have time to fit in a frame, you should skip a frame 
   repaintCanvas() {
-    if (!this.rafId) {
-      this.rafId = requestAnimationFrame(() => {
-        console.log('sent');
-        const message: RenderMessage = {
-          type: 'render',
-          viewport: this.viewportController.viewport
-        }
-        this.worker.postMessage(message);
+    this.isRendering = true;
 
-        this.rafId = null;
-      });
-    } else {
-      console.log('debounced');
+    const message: RenderMessage = {
+      type: 'render',
+      viewport: this.viewportController.viewport
     }
+    this.worker.postMessage(message);
   }
 
   // public method for consumers of this element to send commands to it 

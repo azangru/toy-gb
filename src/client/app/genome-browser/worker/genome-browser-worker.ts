@@ -3,7 +3,7 @@ import Painter from '../drawing';
 import rulerProgram from '../programs/ruler';
 import { geneProgram } from '../programs/genes';
 
-import type { OffscreenCanvasMessage, RenderMessage } from "./worker-message-type";
+import type { OffscreenCanvasMessage, RenderMessage, RenderCompleteMessage } from "./worker-message-type";
 import type { Viewport } from '../controllers/viewport-controller';
 import type { Shape } from '../shapes/shape-types';
 
@@ -46,6 +46,11 @@ const render = async (data: RenderMessage) => {
   const shapes = await prepareShapes(viewport);
   clearCanvas();
   paintShapes({ shapes, viewport });
+
+  const renderCompleteMessage: RenderCompleteMessage = {
+    type: 'render-complete'
+  };
+  postMessage(renderCompleteMessage);
 };
 
 const clearCanvas = () => {

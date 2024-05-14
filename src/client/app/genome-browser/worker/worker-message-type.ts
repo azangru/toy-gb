@@ -20,3 +20,7 @@ export type RenderMessage = {
   type: 'render';
   viewport: Viewport;
 };
+
+export type RenderCompleteMessage = {
+  type: 'render-complete';
+};

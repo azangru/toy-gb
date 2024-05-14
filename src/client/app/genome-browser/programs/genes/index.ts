@@ -33,17 +33,17 @@ export const geneProgram = async (params: GenesProgramParams) => {
   const viewportRange = params.viewport.end - params.viewport.start;
 
   // Low resolution at high scale (starting at 2^19 nucleotides):
-  // if (viewportRange >= 2**19) {
-  //   return canonicalTranscripts.map(transcript => {
-  //     return new SolidRectangle({
-  //       x: transcript.start,
-  //       y: 0,
-  //       width: transcript.end - transcript.start,
-  //       height: 10,
-  //       color: 'red'
-  //     });
-  //   });
-  // }
+  if (viewportRange >= 2**19) {
+    return canonicalTranscripts.map(transcript => {
+      return new SolidRectangle({
+        x: transcript.start,
+        y: 0,
+        width: transcript.end - transcript.start,
+        height: 10,
+        color: 'red'
+      });
+    });
+  }
 
   const shapes: Shape[] = [];
 
